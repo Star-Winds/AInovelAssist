@@ -1,106 +1,136 @@
-﻿# AInovelAssist
+﻿
+---
 
-一个 **AI 小说辅助写作 Demo** 项目。  
-目标是探索如何用 Python + 数据库 + LLM 构建一个能处理 **百万字长文本** 的小说写作助手。  
+```markdown
+# 🧠 AI小说助手 AInovelAssist
+
+一个基于 Python 的 AI 小说辅助项目，目标是实现**文本清洗、分章入库、分块检索**，为后续 AI 创作与语义分析打基础。
 
 ---
 
-## ✨ 功能概览
+## 🚀 当前进度
 
-当前：
-- ✅ 数据库初始化（`documents / chapters / chunks` 三张表）
-- ✅ GitHub 仓库搭建，配置 `.gitignore`
-- 🚧 章节文本清洗函数（开发中）
-	
-	目前已完成ingest.py函数，用以清洗UTF-8编码模式的纯文本内容，清洗包括：
-		
-		- 归一化换行
-		- 去除常见页眉/页脚/页码
-		- 合并多余空行（最多保留 1 行）
-		- 去除行首/尾多余空格
-	但达不成预期效果，仍在尝试中······
-
-- 计划：
-- ⏳ 长文本导入与分块存储
-- ⏳ 支持文本检索与上下文关联
-- ⏳ 角色卡片生成与推演
-- ⏳ 内容审校（错字、逻辑一致性）
-- ⏳ 大纲与内容的双向调整
+| 模块 | 功能 | 状态 |
+|------|------|------|
+| 环境搭建 | 使用 Python 3.13 + venv 虚拟环境 | ✅ 已完成 |
+| 数据库结构 | SQLite (`documents`, `chapters`, `chunks`) | ✅ 已完成 |
+| 文本清洗 | 自动换行归一化、空行压缩 | ✅ 已完成 |
+| 自动编码识别 | 支持 UTF-8 / GBK / DOCX 自动识别 | ✅ 已完成 |
+| 入库逻辑 | 支持命令行参数 `--to-db`、`--chunk-size` 分块存储 | ✅ 已完成 |
+| 单元测试 | `pytest` 覆盖文本清洗、编码识别、docx读取 | ✅ 已完成 |
+| 全文检索 | （下一阶段：FTS5 实现全文搜索） | 🔜 规划中 |
 
 ---
 
-## 📂 项目结构
-```text
+## 🧩 项目结构
+
+```
+
 AInovelAssist/
-├── data/              # 数据文件（未纳入版本控制）
-├── scripts/           # 脚本
-│   ├── init_db.py     # 初始化数据库
-│   └── ingest.py      # 文本导入（开发中）
-├── .gitignore
-└── README.md
+│
+├── data/                  # 数据文件夹
+│   ├── novel.db           # 本地 SQLite 数据库（自动生成）
+│   ├── utf8.txt           # 测试文本（UTF8）
+│   ├── gbk.txt            # 测试文本（GBK）
+│   └── sample.docx        # 测试 Word 文件
+│
+├── scripts/
+│   ├── ingest.py          # 核心：读取、清洗、分块、入库
+│   └── init_db.py         # 初始化数据库表结构
+│
+├── tests/
+│   └── test_ingest.py     # pytest 测试脚本
+│
+├── requirements.txt       # 项目依赖
+└── README.md              # 项目说明
+
+````
+
+---
+
+## ⚙️ 使用方法
+
+### 1️⃣ 初始化数据库
+```bash
+python scripts/init_db.py
+````
+
+### 2️⃣ 读取并清洗文本
+
+```bash
+python scripts/ingest.py data/utf8.txt --print
+```
+
+### 3️⃣ 清洗并入库（自动分块）
+
+```bash
+python scripts/ingest.py data/utf8.txt \
+    --to-db \
+    --doc-title "测试长文" \
+    --chapter "第1章" \
+    --chunk-size 1200
+```
+
+输出示例：
+
+```
+🗂 已入库 → document_id=1, chapter_id=1, chunks=1, db=data/novel.db
+```
+
+### 4️⃣ 运行测试
+
+```bash
+pytest -q
 ```
 
 ---
 
-## 🚀 快速开始
-1. 克隆仓库
-```
-1. git clone git@github.com:Star-Winds/AInovelAssist.git
-cd AInovelAssist
-```
+## 🧰 依赖环境
 
-2. 创建并激活虚拟环境
-```
-1. python -m venv .venv
+在虚拟环境中安装依赖：
 
-
-# Windows
-	.venv\Scripts\activate
-
-
-# macOS / Linux
-	source .venv/bin/activate
-```
-
-3. 安装依赖
-
-```
-（未来会提供 requirements.txt）
+```bash
 pip install -r requirements.txt
 ```
-4. 初始化数据库
+
+当前 `requirements.txt` 包含：
+
 ```
-1. python scripts/init_db.py
+charset-normalizer==3.4.0
+python-docx==1.1.2
+pytest==8.3.3
 ```
 
 ---
 
-## 🛣️ Roadmap
+## 🔮 下一步规划
 
- 文本导入与清洗
-
- 分块存储与检索
-
- 角色卡片生成
-
- 内容审校
-
- 大纲与内容的双向调整
- 
- ---
-
-## 🎯 学习目标
-
-本项目同时用于：
-
-系统性学习 Python 脚本编写习惯
-
-理解数据库操作与基本原理
-
-掌握 Git/GitHub 的使用（版本管理、协作与展示）
+* [ ] 增加 `scripts/search.py`，基于 SQLite FTS5 实现全文检索
+* [ ] 设计角色卡片与小说知识库表
+* [ ] 实现前端交互 Demo（Flask / Streamlit）
+* [ ] 支持网页文本爬取与自动入库
 
 ---
 
-## 📜 License
+## ✨ 作者目标
 
-MIT License
+> 本项目主要用于学习和搭建 AI 小说工作流，目标是在理解每一行代码逻辑的基础上，逐步完成自动化文本处理与语义检索系统。
+
+---
+
+*更新日期：2025-10-09*
+
+````
+
+---
+
+## 📘 提交方式
+
+在 PowerShell 中执行：
+```powershell
+git add README.md
+git commit -m "更新 README，整理项目阶段成果与使用说明"
+git push origin main
+````
+
+---
