@@ -1,4 +1,12 @@
-.venv/
+# Python
 __pycache__/
 *.pyc
+.venv/
+
+# Data
 data/*.db
+data/*.txt
+data/*.docx
+
+# Backup
+scripts/ingest_backup.py

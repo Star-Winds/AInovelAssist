@@ -1,49 +1,53 @@
 ﻿import sqlite3
-from pathlib import Path 
+from pathlib import Path
 
 def init_db():
-    # 确保 data 文件夹存在（没有就创建）
+    # 确保 data 文件夹存在
     Path("data").mkdir(exist_ok=True)
 
-    # 连接数据库（如果 data/novel.db 不存在，会自动新建）
     conn = sqlite3.connect("data/novel.db")
-    cursor = conn.cursor()
+    cur = conn.cursor()
 
-    # 在数据库里新建一张表 documents
-    cursor.execute("""
+    # 开启外键
+    cur.execute("PRAGMA foreign_keys = ON;")
+
+    # documents
+    cur.execute("""
     CREATE TABLE IF NOT EXISTS documents (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
-        source TEXT
+        source TEXT,
+        created_at TEXT
     );
     """)
 
-    cursor.execute("""
+    # chapters（注意 "index" 用引号）
+    cur.execute("""
     CREATE TABLE IF NOT EXISTS chapters (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        document_id INTEGER,
-        idx INTEGER,
+        document_id INTEGER NOT NULL,
+        "index" INTEGER,
         title TEXT,
-        path TEXT
+        path TEXT,
+        FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
     );
     """)
 
-    cursor.execute("""
+    # chunks
+    cur.execute("""
     CREATE TABLE IF NOT EXISTS chunks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        chapter_id INTEGER,
-        idx INTEGER,
+        chapter_id INTEGER NOT NULL,
+        "index" INTEGER,
         text TEXT,
-        char_len INTEGER
+        char_len INTEGER,
+        FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
     );
     """)
 
-
-    # 保存修改并关闭连接
     conn.commit()
     conn.close()
 
 if __name__ == "__main__":
     init_db()
-    print("数据库初始化完成！")
-
+    print("✅ 数据库初始化完成！data/novel.db 已就绪。")
