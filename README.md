@@ -19,6 +19,7 @@
 | 入库逻辑 | 支持命令行参数 `--to-db`、`--chunk-size` 分块存储 | ✅ 已完成 |
 | AI 小说助手 | 新增自由创作、文本收纳、人物卡片、章节审阅与灵感提示 | ✅ 已完成 |
 | 单元测试 | `pytest` 覆盖文本清洗、编码识别、docx读取、助手功能 | ✅ 已完成 |
+| 向量数据库 | 基于 TF-IDF 的中文 2-4gram 向量库，支持相似段落检索 | ✅ 已完成 |
 | 全文检索 | （下一阶段：FTS5 实现全文搜索） | 🔜 规划中 |
 
 ---
@@ -88,7 +89,28 @@ python scripts/ingest.py data/utf8.txt \
 🗂 已入库 → document_id=1, chapter_id=1, chunks=1, db=data/novel.db
 ```
 
-### 4️⃣ AI 小说助手模式
+### 4️⃣ 构建向量数据库并相似检索
+
+基于 SQLite 中的 `chunks` 表自动生成 TF-IDF 向量索引，便于粗粒度语义检索：
+
+```bash
+# 从已入库的 chunks 重建向量索引
+python scripts/vector_db.py --rebuild
+
+# 查询相似段落（top5），默认索引路径 data/vector_store.joblib
+python scripts/vector_db.py "徽章 北方" --topk 5
+```
+
+输出示例：
+
+```
+🔧 正在重建向量索引…
+✅ 已保存到 data/vector_store.joblib
+[score=0.742] 边城纪事 / 第1章 (chunk#1) -> 阿黎在码头等船，陌生人递给她一枚徽章。
+...（其余结果略）
+```
+
+### 5️⃣ AI 小说助手模式
 
 无需大纲即可试写、收纳章节并获得人物卡片与审稿提示：
 
@@ -117,7 +139,7 @@ print(assistant.inspire("边城纪事", hint="雨夜"))
 PY
 ```
 
-### 4️⃣ 运行测试
+### 6️⃣ 运行测试
 
 ```bash
 pytest -q
