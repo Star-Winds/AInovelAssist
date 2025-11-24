@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 小说助手 · GitHub Pages 展示</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: radial-gradient(circle at 20% 20%, #f1f5f9, #ffffff 40%),
+            radial-gradient(circle at 80% 10%, #e0f2fe, rgba(255,255,255,0) 30%),
+            radial-gradient(circle at 30% 80%, #fef3c7, rgba(255,255,255,0) 25%);
+      --primary: #2563eb;
+      --secondary: #0ea5e9;
+      --text: #0f172a;
+      --muted: #475569;
+      --card: rgba(255,255,255,0.8);
+      --border: #e2e8f0;
+      --shadow: 0 10px 50px rgba(15, 23, 42, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'SF Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+    }
+    header {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 56px 24px 24px;
+    }
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .logo {
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 1.05rem;
+    }
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(14,165,233,0.1);
+      color: var(--secondary);
+      border: 1px solid rgba(14,165,233,0.2);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .hero {
+      margin-top: 32px;
+      padding: 32px;
+      border-radius: 18px;
+      background: linear-gradient(120deg, rgba(37,99,235,0.1), rgba(14,165,233,0.08));
+      border: 1px solid rgba(37,99,235,0.12);
+      box-shadow: var(--shadow);
+    }
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: 2.2rem;
+      letter-spacing: -1px;
+    }
+    .hero p { margin: 0 0 18px; color: var(--muted); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(15,23,42,0.04);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      cursor: pointer;
+    }
+    .btn.primary {
+      background: linear-gradient(120deg, #2563eb, #0ea5e9);
+      color: white;
+      border: none;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(15,23,42,0.1); }
+    main { max-width: 1100px; margin: 0 auto; padding: 16px 24px 48px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+    .card {
+      padding: 18px;
+      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    h2 { margin: 0 0 12px; font-size: 1.4rem; }
+    h3 { margin: 0 0 10px; font-size: 1.1rem; }
+    label { display: block; font-weight: 600; margin: 10px 0 6px; color: var(--muted); }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.9);
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
+    .pill { padding: 6px 10px; border-radius: 12px; background: rgba(37,99,235,0.08); color: var(--primary); font-weight: 600; }
+    .output {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', 'SFMono-Regular', monospace;
+      white-space: pre-wrap;
+      min-height: 120px;
+    }
+    .section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .muted { color: var(--muted); font-size: 0.95rem; }
+    .footer { margin-top: 36px; text-align: center; color: var(--muted); }
+    @media (max-width: 640px) {
+      header { padding: 28px 18px 16px; }
+      main { padding: 0 18px 36px; }
+      .hero { padding: 22px; }
+      .hero h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="#" class="logo">AInovelAssist</a>
+      <span class="badge">GitHub Pages Demo</span>
+    </nav>
+    <section class="hero">
+      <h1>AI 小说助手 · 前端展示</h1>
+      <p>零后端依赖的静态页面，展示自由创作、文本收纳、人物卡片、章节审阅与灵感激发的交互流程。可直接部署到 GitHub Pages，用于演示与团队协作。</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#playground">立即体验</a>
+        <a class="btn" href="https://github.com" target="_blank" rel="noreferrer">查看仓库</a>
+        <a class="btn" href="https://github.com/pages" target="_blank" rel="noreferrer">GitHub Pages 指南</a>
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <section id="playground">
+      <div class="section-title">
+        <h2>交互体验区</h2>
+        <span class="muted">静态示例输出，便于在浏览器中演示流程</span>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>📝 自由创作</h3>
+          <label for="prompt">创作提示</label>
+          <input id="prompt" type="text" placeholder="写段小说来看看吧？" />
+          <label for="paragraphs">段落数</label>
+          <input id="paragraphs" type="text" value="2" />
+          <div class="pill-row">
+            <span class="pill">即时生成</span>
+            <span class="pill">可调段落</span>
+          </div>
+          <button class="btn primary" style="margin-top:12px" onclick="runFreeWrite()">生成示例</button>
+          <div id="freeWriteOutput" class="output"></div>
+        </div>
+        <div class="card">
+          <h3>📥 文本收纳 & 人物卡片</h3>
+          <label for="title">作品名</label>
+          <input id="title" type="text" placeholder="边城纪事" />
+          <label for="chapter">章节标题</label>
+          <input id="chapter" type="text" placeholder="第1章" />
+          <label for="chapterText">章节内容</label>
+          <textarea id="chapterText" placeholder="阿黎在码头等船…"></textarea>
+          <button class="btn primary" style="margin-top:12px" onclick="collectChapter()">存储并生成人物卡</button>
+          <div id="collectOutput" class="output"></div>
+        </div>
+        <div class="card">
+          <h3>🔎 审稿与灵感激发</h3>
+          <label for="reviewText">新章节片段</label>
+          <textarea id="reviewText" placeholder="陌生人告诉阿黎要去北方…"></textarea>
+          <label for="hint">灵感关键词（可选）</label>
+          <input id="hint" type="text" placeholder="雨夜 / 离别 / 伏笔" />
+          <div class="pill-row">
+            <span class="pill">错别字与语法</span>
+            <span class="pill">人设连贯</span>
+            <span class="pill">大纲对齐</span>
+          </div>
+          <button class="btn primary" style="margin-top:12px" onclick="reviewChapter()">生成建议与灵感</button>
+          <div id="reviewOutput" class="output"></div>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:32px;" class="card">
+      <div class="section-title">
+        <h2>如何在本地运行真实后端</h2>
+        <span class="muted">保持页面静态展示的同时，提供 CLI / API 接入指引</span>
+      </div>
+      <div class="grid" style="margin-top:8px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        <div>
+          <h3>初始化与数据入库</h3>
+          <p class="muted">在本地克隆仓库，启动虚拟环境并创建 SQLite 数据库。</p>
+<pre class="output" style="min-height:0; background:#0b1224;">
+pip install -r requirements.txt
+python scripts/init_db.py
+python scripts/ingest.py data/utf8.txt --to-db \
+  --doc-title "边城纪事" --chapter "第1章" --chunk-size 1200
+</pre>
+        </div>
+        <div>
+          <h3>调用 Python 助手</h3>
+          <p class="muted">利用 <code>NovelAssistant</code> 体验自由创作、收纳与审稿。</p>
+<pre class="output" style="min-height:0; background:#0b1224;">
+python - <<'PY'
+from scripts.assistant import NovelAssistant
+assistant = NovelAssistant()
+print(assistant.free_write("写段小说来看看吧？"))
+assistant.collect_text("边城纪事", "第1章", "阿黎在码头等船…")
+print(assistant.inspire("边城纪事", hint="雨夜"))
+PY
+</pre>
+        </div>
+        <div>
+          <h3>部署到 GitHub Pages</h3>
+          <p class="muted">将 <code>docs/index.html</code> 提交到主分支，随后在仓库设置中启用 Pages（Source 选择 <strong>docs/</strong>）。</p>
+          <ul>
+            <li>仓库 → Settings → Pages → Source 选择 <code>Deploy from a branch</code></li>
+            <li>Branch 选择 <code>main</code>，目录选择 <code>/docs</code></li>
+            <li>等待构建完成，即可在线分享演示地址</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      构建于 <strong>AInovelAssist</strong> · 静态前端仅用于演示，真实功能请在本地或服务器运行 Python 后端。
+    </div>
+  </main>
+
+  <script>
+    const sample = {
+      freeWrite: [
+        "夜色落在旧码头，锈迹斑斑的铁灯晃出一圈光晕。阿黎握着火柴盒，等一艘永远迟到的船，也等迟迟未兑现的口令。",
+        "远处传来汽笛，雾气推开，船影出现。有人在甲板上举手示意，阿黎才知道，命运的序章已经写好，只差点火。"
+      ],
+      review: [
+        "错别字与标点：未发现明显错误，建议将“北方”统一为专有地名保持氛围。",
+        "人设连贯：阿黎保持谨慎性格，若突然随行可增加迟疑或交换暗号的描写。",
+        "大纲对齐：若主线是寻找口令来源，可在本段埋下“谁给的口令”疑问，强化悬念。"
+      ],
+      inspire: "从雨夜的倒影切入：码头的灯光被雨水拉长，陌生人的伞骨敲击甲板，声音像节拍器催促阿黎踏出下一步。"
+    };
+
+    function runFreeWrite() {
+      const prompt = document.getElementById('prompt').value || '写段小说来看看吧？';
+      const paragraphs = parseInt(document.getElementById('paragraphs').value, 10) || 2;
+      const result = Array.from({ length: paragraphs }, (_, i) => `${i + 1}. ${sample.freeWrite[i % sample.freeWrite.length]}`);
+      document.getElementById('freeWriteOutput').textContent = `prompt: ${prompt}\n\n` + result.join('\n\n');
+    }
+
+    function collectChapter() {
+      const title = document.getElementById('title').value || '边城纪事';
+      const chapter = document.getElementById('chapter').value || '第1章';
+      const text = (document.getElementById('chapterText').value || '阿黎在码头等船…').slice(0, 120);
+      const cards = [
+        `角色：阿黎\n定位：码头信使；性格：谨慎、克制\n成长关键：仍在寻找口令来源的真相。`,
+        `角色：柳青\n定位：暗线观察者；性格：冷静、怀疑\n行动轨迹：暗处监视码头，关注陌生人来往。`
+      ];
+      document.getElementById('collectOutput').textContent = [
+        `已收纳《${title}》·${chapter}，示例片段：${text}…`,
+        '',
+        '人物卡片预览：',
+        cards.join('\n\n')
+      ].join('\n');
+    }
+
+    function reviewChapter() {
+      const fragment = document.getElementById('reviewText').value || '陌生人告诉阿黎要去北方…';
+      const hint = document.getElementById('hint').value;
+      const lines = sample.review.map((line, i) => `${i + 1}. ${line}`);
+      if (hint) {
+        lines.push('', `灵感激发（${hint}）：${sample.inspire}`);
+      } else {
+        lines.push('', `灵感激发：${sample.inspire}`);
+      }
+      document.getElementById('reviewOutput').textContent = `章节片段：${fragment}\n\n` + lines.join('\n');
+    }
+
+    runFreeWrite();
+    collectChapter();
+    reviewChapter();
+  </script>
+</body>
+</html>

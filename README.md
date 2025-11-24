@@ -51,6 +51,16 @@ AInovelAssist/
 
 ## ⚙️ 使用方法
 
+### 🌐 GitHub Pages 前端展示
+
+仓库内新增 `docs/index.html`，可直接在 GitHub Pages 上以静态方式演示“自由创作 / 文本收纳 / 人物卡片 / 审稿与灵感激发”等流程。启用步骤：
+
+1. 推送最新代码到主分支。
+2. 仓库 → **Settings** → **Pages**，选择 **Deploy from a branch**。
+3. Branch 选择 `main`，目录选择 `/docs`，保存后稍等即可在公开链接访问演示页。
+
+> 演示页为纯前端静态示例，真实效果请在本地运行 Python 脚本。
+
 ### 1️⃣ 初始化数据库
 ```bash
 python scripts/init_db.py
