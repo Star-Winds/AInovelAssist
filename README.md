@@ -167,6 +167,7 @@ bash install.sh
 bash uninstall.sh
 ```
 
+
 ### 8️⃣ GUI & EXE 打包
 
 * 直接运行 Tkinter 窗口体验常用功能：
@@ -182,6 +183,8 @@ python scripts/exe_builder.py --entry scripts/gui_app.py --name AInovelAssistGUI
 ```
 
 生成的可执行文件位于 `dist/` 目录，可在无 Python 环境的机器上运行，提供 demo、自由创作、收纳、向量检索、灵感提示等简易交互。
+
+
 
 ---
 
