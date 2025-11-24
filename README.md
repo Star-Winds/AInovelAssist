@@ -147,6 +147,7 @@ pytest -q
 
 ### 7️⃣ 简易 CLI 应用 + 安装/卸载
 
+
 > Windows 为默认环境，提供 PowerShell 安装/卸载脚本，生成 `bin\ainovelassist.cmd` 启动器。
 
 **安装步骤（在仓库根目录打开 PowerShell 执行）：**
@@ -174,6 +175,54 @@ powershell -ExecutionPolicy Bypass -File install.ps1
 ```powershell
 powershell -ExecutionPolicy Bypass -File uninstall.ps1
 ```
+
+=======
+> 想快速体验完整流程（入库 → 向量检索 → 灵感提示），可以使用随仓库提供的简易 CLI。
+
+
+**安装步骤（仓库已同步到本地后，在根目录执行）：**
+
+```bash
+# 创建虚拟环境、安装依赖并生成 ./bin/ainovelassist 启动器
+
+```bash
+# 安装：创建 .venv、安装依赖并生成 ./bin/ainovelassist
+
+bash install.sh
+
+# 运行内置示例（自动写入 demo 章节、重建向量索引并展示结果）
+./bin/ainovelassist demo
+
+```
+
+常用子命令：
+
+```bash
+
+
+# 常用子命令
+
+./bin/ainovelassist free-write "写段小说来看看吧？" --paragraphs 1
+./bin/ainovelassist collect "边城纪事" "第2章" "陌生人让阿黎前往灯塔。" --chunk-size 400
+./bin/ainovelassist rebuild
+./bin/ainovelassist search "徽章 北方" --topk 3
+./bin/ainovelassist inspire "边城纪事" --hint "雨夜"
+
+```
+
+卸载（清理虚拟环境与启动脚本）：
+
+```bash
+bash uninstall.sh
+```
+
+
+# 卸载：删除虚拟环境与启动脚本
+bash uninstall.sh
+```
+
+
+
 
 ### 8️⃣ GUI & EXE 打包
 
