@@ -11,14 +11,46 @@ def detect_and_read(path: Path):
         doc = Document(path); text = "\n".join(p.text for p in doc.paragraphs)
         return text, "docx", path.stat().st_size
     result = from_path(path); best = result.best()
-    enc = (best.encoding or "utf-8").strip()
-    if enc.lower().startswith("utf-8"): enc = "utf-8-sig"
-    try:
-        with open(path, "r", encoding=enc, errors="replace") as f: text = f.read()
-    except Exception:
-        with open(path, "r", encoding="utf-8", errors="replace") as f: text = f.read()
-        enc = "utf-8(fallback)"
-    return text, enc, path.stat().st_size
+    raw = path.read_bytes()
+
+    def plausible_chinese(txt: str) -> bool:
+        if not txt:
+            return False
+        han = sum(1 for ch in txt if "\u4e00" <= ch <= "\u9fff")
+        return han / max(len(txt), 1) >= 0.2
+
+    preferred = []
+    if best and best.encoding:
+        enc_norm = best.encoding.lower().replace("_", "-")
+        if any(enc_norm.startswith(prefix) for prefix in ["utf-8", "gb"]):
+            preferred.append(best.encoding)
+    ordered = preferred + [e for e in ["utf-8-sig", "utf-8", "gbk", "cp936", "gb2312"] if e not in preferred]
+    if best and best.encoding not in ordered:
+        ordered.append(best.encoding)
+
+    candidates = ordered
+
+    text = None; chosen = None; tried = set()
+    for enc in candidates:
+        enc_norm = enc.lower().replace("_", "-")
+        if enc_norm in tried:
+            continue
+        tried.add(enc_norm)
+        try:
+            decoded = raw.decode(enc, errors="strict")
+            if not plausible_chinese(decoded):
+                continue
+            text = decoded
+            chosen = enc
+            break
+        except UnicodeDecodeError:
+            continue
+
+    if text is None:
+        text = raw.decode("utf-8", errors="replace")
+        chosen = "utf-8(fallback)"
+    text = text.lstrip("\ufeff")
+    return text, chosen, path.stat().st_size
 
 def clean_text(text: str) -> str:
     text = text.replace("\r\n","\n").replace("\r","\n")

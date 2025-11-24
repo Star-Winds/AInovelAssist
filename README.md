@@ -17,7 +17,8 @@
 | 文本清洗 | 自动换行归一化、空行压缩 | ✅ 已完成 |
 | 自动编码识别 | 支持 UTF-8 / GBK / DOCX 自动识别 | ✅ 已完成 |
 | 入库逻辑 | 支持命令行参数 `--to-db`、`--chunk-size` 分块存储 | ✅ 已完成 |
-| 单元测试 | `pytest` 覆盖文本清洗、编码识别、docx读取 | ✅ 已完成 |
+| AI 小说助手 | 新增自由创作、文本收纳、人物卡片、章节审阅与灵感提示 | ✅ 已完成 |
+| 单元测试 | `pytest` 覆盖文本清洗、编码识别、docx读取、助手功能 | ✅ 已完成 |
 | 全文检索 | （下一阶段：FTS5 实现全文搜索） | 🔜 规划中 |
 
 ---
@@ -75,6 +76,35 @@ python scripts/ingest.py data/utf8.txt \
 
 ```
 🗂 已入库 → document_id=1, chapter_id=1, chunks=1, db=data/novel.db
+```
+
+### 4️⃣ AI 小说助手模式
+
+无需大纲即可试写、收纳章节并获得人物卡片与审稿提示：
+
+```bash
+python - <<'PY'
+from scripts.assistant import NovelAssistant
+
+assistant = NovelAssistant()
+
+# 自由创作模式：给出一句 prompt 生成两段草稿
+print(assistant.free_write("写段小说来看看吧？", paragraphs=2))
+
+# 文本收纳：将章节存入数据库（自动分块）
+assistant.collect_text("边城纪事", "第1章", "阿黎在码头等船，阿黎记下了陌生人的口令。")
+
+# 人物管理：生成人物卡片
+for card in assistant.generate_character_cards("边城纪事"):
+    print(card)
+
+# 核心编辑：对新章节给出审稿建议
+comments = assistant.review_chapter("边城纪事", "陌生人告诉阿黎要去北方。柳青在暗处观察。")
+print("\n".join(comments))
+
+# 灵感激发：在卡文时给出续写角度
+print(assistant.inspire("边城纪事", hint="雨夜"))
+PY
 ```
 
 ### 4️⃣ 运行测试
