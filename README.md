@@ -147,6 +147,36 @@ pytest -q
 
 ### 7️⃣ 简易 CLI 应用 + 安装/卸载
 
+
+> Windows 为默认环境，提供 PowerShell 安装/卸载脚本，生成 `bin\ainovelassist.cmd` 启动器。
+
+**安装步骤（在仓库根目录打开 PowerShell 执行）：**
+
+```powershell
+# 创建虚拟环境、安装依赖并生成 .\bin\ainovelassist.cmd 启动器
+powershell -ExecutionPolicy Bypass -File install.ps1
+
+# 运行内置示例（自动写入 demo 章节、重建向量索引并展示结果）
+.\bin\ainovelassist.cmd demo
+```
+
+常用子命令：
+
+```powershell
+.\bin\ainovelassist.cmd free-write "写段小说来看看吧？" --paragraphs 1
+.\bin\ainovelassist.cmd collect "边城纪事" "第2章" "陌生人让阿黎前往灯塔。" --chunk-size 400
+.\bin\ainovelassist.cmd rebuild
+.\bin\ainovelassist.cmd search "徽章 北方" --topk 3
+.\bin\ainovelassist.cmd inspire "边城纪事" --hint "雨夜"
+```
+
+卸载（清理虚拟环境与启动脚本）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File uninstall.ps1
+```
+
+=======
 > 想快速体验完整流程（入库 → 向量检索 → 灵感提示），可以使用随仓库提供的简易 CLI。
 
 
@@ -193,6 +223,7 @@ bash uninstall.sh
 
 
 
+
 ### 8️⃣ GUI & EXE 打包
 
 * 直接运行 Tkinter 窗口体验常用功能：
@@ -208,7 +239,6 @@ python scripts/exe_builder.py --entry scripts/gui_app.py --name AInovelAssistGUI
 ```
 
 生成的可执行文件位于 `dist/` 目录，可在无 Python 环境的机器上运行，提供 demo、自由创作、收纳、向量检索、灵感提示等简易交互。
-
 
 ---
 
