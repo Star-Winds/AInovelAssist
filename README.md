@@ -145,6 +145,28 @@ PY
 pytest -q
 ```
 
+### 7️⃣ 简易 CLI 应用 + 安装/卸载
+
+> 想快速体验完整流程（入库 → 向量检索 → 灵感提示），可以使用随仓库提供的简易 CLI。
+
+```bash
+# 安装：创建 .venv、安装依赖并生成 ./bin/ainovelassist
+bash install.sh
+
+# 运行内置示例（自动写入 demo 章节、重建向量索引并展示结果）
+./bin/ainovelassist demo
+
+# 常用子命令
+./bin/ainovelassist free-write "写段小说来看看吧？" --paragraphs 1
+./bin/ainovelassist collect "边城纪事" "第2章" "陌生人让阿黎前往灯塔。" --chunk-size 400
+./bin/ainovelassist rebuild
+./bin/ainovelassist search "徽章 北方" --topk 3
+./bin/ainovelassist inspire "边城纪事" --hint "雨夜"
+
+# 卸载：删除虚拟环境与启动脚本
+bash uninstall.sh
+```
+
 ---
 
 ## 🧰 依赖环境
