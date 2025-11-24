@@ -19,6 +19,7 @@
 | 入库逻辑 | 支持命令行参数 `--to-db`、`--chunk-size` 分块存储 | ✅ 已完成 |
 | AI 小说助手 | 新增自由创作、文本收纳、人物卡片、章节审阅与灵感提示 | ✅ 已完成 |
 | 单元测试 | `pytest` 覆盖文本清洗、编码识别、docx读取、助手功能 | ✅ 已完成 |
+| 向量数据库 | 基于 TF-IDF 的中文 2-4gram 向量库，支持相似段落检索 | ✅ 已完成 |
 | 全文检索 | （下一阶段：FTS5 实现全文搜索） | 🔜 规划中 |
 
 ---
@@ -88,7 +89,28 @@ python scripts/ingest.py data/utf8.txt \
 🗂 已入库 → document_id=1, chapter_id=1, chunks=1, db=data/novel.db
 ```
 
-### 4️⃣ AI 小说助手模式
+### 4️⃣ 构建向量数据库并相似检索
+
+基于 SQLite 中的 `chunks` 表自动生成 TF-IDF 向量索引，便于粗粒度语义检索：
+
+```bash
+# 从已入库的 chunks 重建向量索引
+python scripts/vector_db.py --rebuild
+
+# 查询相似段落（top5），默认索引路径 data/vector_store.joblib
+python scripts/vector_db.py "徽章 北方" --topk 5
+```
+
+输出示例：
+
+```
+🔧 正在重建向量索引…
+✅ 已保存到 data/vector_store.joblib
+[score=0.742] 边城纪事 / 第1章 (chunk#1) -> 阿黎在码头等船，陌生人递给她一枚徽章。
+...（其余结果略）
+```
+
+### 5️⃣ AI 小说助手模式
 
 无需大纲即可试写、收纳章节并获得人物卡片与审稿提示：
 
@@ -117,11 +139,57 @@ print(assistant.inspire("边城纪事", hint="雨夜"))
 PY
 ```
 
-### 4️⃣ 运行测试
+### 6️⃣ 运行测试
 
 ```bash
 pytest -q
 ```
+
+### 7️⃣ 简易 CLI 应用 + 安装/卸载
+
+> 想快速体验完整流程（入库 → 向量检索 → 灵感提示），可以使用随仓库提供的简易 CLI。
+
+**安装步骤（仓库已同步到本地后，在根目录执行）：**
+
+```bash
+# 创建虚拟环境、安装依赖并生成 ./bin/ainovelassist 启动器
+bash install.sh
+
+# 运行内置示例（自动写入 demo 章节、重建向量索引并展示结果）
+./bin/ainovelassist demo
+```
+
+常用子命令：
+
+```bash
+./bin/ainovelassist free-write "写段小说来看看吧？" --paragraphs 1
+./bin/ainovelassist collect "边城纪事" "第2章" "陌生人让阿黎前往灯塔。" --chunk-size 400
+./bin/ainovelassist rebuild
+./bin/ainovelassist search "徽章 北方" --topk 3
+./bin/ainovelassist inspire "边城纪事" --hint "雨夜"
+```
+
+卸载（清理虚拟环境与启动脚本）：
+
+```bash
+bash uninstall.sh
+```
+
+### 8️⃣ GUI & EXE 打包
+
+* 直接运行 Tkinter 窗口体验常用功能：
+
+```bash
+python scripts/gui_app.py
+```
+
+* Windows 下可用 PyInstaller 打包单文件 exe（需先 `pip install pyinstaller`）：
+
+```bash
+python scripts/exe_builder.py --entry scripts/gui_app.py --name AInovelAssistGUI
+```
+
+生成的可执行文件位于 `dist/` 目录，可在无 Python 环境的机器上运行，提供 demo、自由创作、收纳、向量检索、灵感提示等简易交互。
 
 ---
 
