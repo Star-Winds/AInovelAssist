@@ -1,3 +1,20 @@
+import os
+from openai import OpenAI
+
+SILICONFLOW_API_KEY = os.getenv("SILICONFLOW_API_KEY")
+if not SILICONFLOW_API_KEY:
+    raise RuntimeError("环境变量 SILICONFLOW_API_KEY 未设置，无法调用硅基流动 API。")
+
+client = OpenAI(
+    base_url="https://api.siliconflow.cn/v1",
+    api_key=SILICONFLOW_API_KEY,
+)
+
+# 选一个具体模型（你可以去硅基流动“模型广场”换别的）
+MODEL_NAME = "Qwen/Qwen2.5-7B-Instruct"
+# 或者比如：
+# MODEL_NAME = "deepseek-ai/DeepSeek-V2.5"
+
 """High-level assistant utilities for AI novel workflows.
 
 This module adds:
@@ -5,7 +22,6 @@ This module adds:
 - Editorial mode with text collection, character cards, and chapter review.
 - Inspiration suggestions that build on stored outlines/chapters.
 """
-from __future__ import annotations
 
 import random
 import re
@@ -225,8 +241,31 @@ class NovelAssistant:
     def __init__(self, db_path: str = "data/novel.db"):
         self.repo = StoryRepository(db_path)
 
-    def free_write(self, prompt: str, paragraphs: int = 2, seed: int = 2025) -> str:
-        return free_write(prompt, paragraphs=paragraphs, seed=seed)
+    def _chat(self, system_prompt: str, user_prompt: str, temperature: float = 0.7) -> str:
+        """调用硅基流动 chat.completions，返回一段文本。"""
+        resp = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=temperature,
+        )
+        # OpenAI 风格：choices[0].message.content
+        return resp.choices[0].message.content.strip()
+
+    def free_write(self, prompt: str, paragraphs: int = 2) -> str:
+        """根据提示自由创作若干段文本。"""
+        system = (
+            "你是一名中文小说作者，擅长人物内心和细节描写。"
+            "写作风格可以偏文学，但必须清晰、可读，不要解释自己的写作意图。"
+        )
+        user = (
+            f"请根据下面的提示写一个短篇片段，大约 {paragraphs} 段自然段：\n\n"
+            f"【创作提示】\n{prompt}\n\n"
+            "不要写分析、不要写提纲，直接给出完整小说片段。"
+        )
+        return self._chat(system, user, temperature=0.9)
 
     def collect_text(
         self,
@@ -242,47 +281,34 @@ class NovelAssistant:
         chapters = list(self.repo.iter_chapters(document_title))
         return build_character_cards(chapters)
 
-    def review_chapter(self, document_title: str, new_text: str, outline: str | None = None) -> List[str]:
-        suggestions: List[str] = []
-        cards = self.generate_character_cards(document_title)
-        main_names = [card.name for card in cards[:3]]
+    def review_chapter(self, document_title: str, chapter_text: str) -> list[str]:
+        """对章节进行编辑式审阅，给出具体修改建议。"""
+        system = (
+            "你是一名严格但真诚的中文小说编辑，会从结构、节奏、人物塑造、语言风格几个方面给出具体建议。"
+            "请注意：不要空洞夸赞，要指出可以修改的地方，并给出简短示例或替代思路。"
+        )
+        user = (
+            f"作品标题：{document_title}\n\n"
+            f"下面是一段章节内容，请你进行审阅：\n"
+            f"{chapter_text}\n\n"
+            "请分条给出建议，每条一行，前面可以带【结构】【节奏】【人物】【语言】【世界观】等标签。"
+        )
+        text = self._chat(system, user, temperature=0.6)
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        return lines
 
-        missing_main = [name for name in main_names if name not in new_text]
-        if missing_main:
-            suggestions.append(
-                "主要角色缺席：" + "、".join(missing_main) + " 未在本章出现，确认是否符合人物节奏。"
-            )
-
-        new_names = [name for name in _extract_names(new_text) if name not in main_names]
-        if new_names:
-            suggestions.append(
-                "新增角色：" + "、".join(new_names) + "，请补充动机或在大纲中登记。"
-            )
-
-        if re.search(r"[。！？]{3,}", new_text):
-            suggestions.append("标点过于密集，可能影响阅读节奏，请酌情简化。")
-
-        if re.search(r" {2,}|\t", new_text):
-            suggestions.append("检测到多余空格/制表符，建议统一为单个空格。")
-
-        if outline:
-            suggestions.append("对照大纲：确保关键节点已覆盖 → " + outline[:80].strip())
-
-        if not suggestions:
-            suggestions.append("未发现明显问题，本章可继续深化细节或情绪线。")
-        return suggestions
-
-    def inspire(self, document_title: str, hint: str | None = None) -> List[str]:
-        cards = self.generate_character_cards(document_title)
-        outline_text = self.repo.flatten_document(document_title)
-        hooks = []
-        if cards:
-            lead = cards[0]
-            hooks.append(f"让 {lead.name} 面对早前埋下的秘密，强化其 {lead.traits.get('戏份')} 的弧光。")
-        if outline_text:
-            hooks.append("重写上一章的收尾句，从另一个视角补充细节。")
-        if hint:
-            hooks.append(f"围绕提示“{hint}”构思一段冲突场景，保持人物口吻一致。")
-        if not hooks:
-            hooks.append("从场景设置入手：描述空间、天气或声音，以此引出人物动作。")
-        return hooks
+    def inspire(self, document_title: str, hint: str) -> list[str]:
+        """围绕作品标题和提示词，生成几条不同方向的情节灵感。"""
+        system = (
+            "你是一名资深小说策划编辑，擅长给出简洁有力的剧情方向和桥段点子。"
+            "回答时使用条目形式，每条是一句话，不要写长篇大论。"
+        )
+        user = (
+            f"作品标题：{document_title}\n"
+            f"灵感提示词：{hint}\n\n"
+            "请给出 3~5 条不同方向的剧情灵感，每条一行："
+            "可以是冲突设定、角色抉择、场景设计或叙事结构上的点子。"
+        )
+        text = self._chat(system, user, temperature=0.85)
+        lines = [line.strip(" \n-•\t") for line in text.splitlines() if line.strip()]
+        return lines

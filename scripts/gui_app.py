@@ -1,15 +1,10 @@
-"""DearPyGUI UI for AInovelAssist.
+# scripts/gui_app.py
 
-The interface surfaces the same workflows as the original Tkinter version but
-uses DearPyGUI widgets for a modern, responsive look:
-- Run the demo pipeline (seed, rebuild vectors, search, inspire).
-- Free write paragraphs from a prompt.
-- Collect chapter text into SQLite.
-- Rebuild and search the TF-IDF vector index.
-- Generate inspiration or review feedback for a document.
 """
-from __future__ import annotations
+DearPyGUI UI for AInovelAssist.
+"""
 
+from pathlib import Path
 from typing import Callable
 
 import dearpygui.dearpygui as dpg
@@ -17,6 +12,7 @@ import dearpygui.dearpygui as dpg
 from scripts.app import DEMO_CHAPTER, DEMO_TEXT, DEMO_TITLE
 from scripts.assistant import NovelAssistant
 from scripts.vector_db import VectorStore
+OUTPUT_TAG = "output_text"
 
 
 class Application:
@@ -30,15 +26,29 @@ class Application:
         self.search_query = "徽章 北方"
         self.hint = "雨夜"
 
-        self.output_tag = "output_text"
         self._build_layout()
 
     # --------------------- layout ---------------------
     def _build_layout(self) -> None:
         dpg.create_context()
-        with dpg.font_registry():
-            pass  # placeholder in case custom fonts are added later
 
+        # -------- 注册中文字体 --------
+        with dpg.font_registry():
+            candidates = [
+                Path(r"C:\Windows\Fonts\msyh.ttc"),
+                Path(r"C:\Windows\Fonts\simhei.ttf"),
+            ]
+            font_path = next((p for p in candidates if p.exists()), None)
+
+            if font_path is not None:
+                with dpg.font(str(font_path), 18, tag="default_font"):
+                    dpg.add_font_range_hint(dpg.mvFontRangeHint_Default)
+                    dpg.add_font_range_hint(dpg.mvFontRangeHint_Chinese_Full)
+                dpg.bind_font("default_font")
+            else:
+                print("[字体警告] 未找到系统中文字体，将使用默认字体。")
+
+        # ---------------- UI 界面 ----------------
         with dpg.window(tag="MainWindow", label="AInovelAssist UI", width=980, height=720):
             dpg.add_text("存储位置", color=(180, 180, 255))
             with dpg.group(horizontal=True):
@@ -60,6 +70,17 @@ class Application:
                 dpg.add_input_text(label="章节标题", default_value=self.chapter, tag="chapter", width=300)
 
             dpg.add_separator()
+            dpg.add_text("章节内容", color=(180, 180, 255))
+            dpg.add_input_text(
+                label="",
+                tag="chapter_body",
+                multiline=True,
+                height=260,
+                width=-1,
+                hint="在这里粘贴或编写你的章节正文……",
+            )
+
+            dpg.add_separator()
             dpg.add_text("操作", color=(180, 180, 255))
             with dpg.group(horizontal=True):
                 actions = [
@@ -77,12 +98,12 @@ class Application:
             dpg.add_separator()
             dpg.add_text("输出", color=(180, 180, 255))
             dpg.add_input_text(
-                tag=self.output_tag,
+                tag=OUTPUT_TAG,
                 multiline=True,
-                readonly=True,
-                height=360,
+                 readonly=True,
+                height=200,
                 width=-1,
-                default_value="点击上方按钮开始吧！",
+                default_value="点击上方按钮开始吧！\n推荐流程：先粘贴章节 → 收纳章节 → 重建向量 → 相似检索。",
             )
 
         dpg.create_viewport(title="AInovelAssist", width=1000, height=760)
@@ -91,12 +112,17 @@ class Application:
 
     # --------------------- helpers ---------------------
     def _show_text(self, text: str) -> None:
-        dpg.set_value(self.output_tag, text)
+            # 防御性检查，避免传入不存在的 item id
+        if not dpg.does_item_exist(OUTPUT_TAG):
+            print("[UI警告] 输出控件不存在，准备输出的内容为：")
+            print(text[:200])
+            return
+        dpg.set_value(OUTPUT_TAG, text)
 
     def _run_action(self, handler: Callable[[], str]) -> None:
         try:
             result = handler()
-        except Exception as exc:  # surface error to UI
+        except Exception as exc:
             result = f"❌ 操作失败：{exc}"
         self._show_text(result)
 
@@ -110,7 +136,7 @@ class Application:
         return VectorStore(db_path, index_path)
 
     # --------------------- actions ---------------------
-    def run_demo(self, sender=None, app_data=None) -> None:  # type: ignore[override]
+    def run_demo(self, sender=None, app_data=None) -> None:
         def handler() -> str:
             assistant = self._create_assistant()
             store = self._create_store()
@@ -135,47 +161,51 @@ class Application:
 
         self._run_action(handler)
 
-    def free_write(self, sender=None, app_data=None) -> None:  # type: ignore[override]
+    def free_write(self, sender=None, app_data=None) -> None:
         def handler() -> str:
             assistant = self._create_assistant()
             return assistant.free_write(dpg.get_value("prompt"), paragraphs=2)
 
         self._run_action(handler)
 
-    def collect_text(self, sender=None, app_data=None) -> None:  # type: ignore[override]
+    def collect_text(self, sender=None, app_data=None) -> None:
         def handler() -> str:
             assistant = self._create_assistant()
+            chapter_body = dpg.get_value("chapter_body")
+            if not chapter_body.strip():
+                return "⚠️ 章节内容为空，请先在「章节内容」里粘贴或输入文本。"
+
             doc_id, chapter_id, chunks = assistant.collect_text(
                 dpg.get_value("document"),
                 dpg.get_value("chapter"),
-                dpg.get_value("prompt"),
+                chapter_body,
                 chunk_size=400,
             )
             return (
-                "已入库\n"
+                "✅ 已入库\n"
                 f"document_id={doc_id}\nchapter_id={chapter_id}\nchunks={chunks}"
             )
 
         self._run_action(handler)
 
-    def rebuild_index(self, sender=None, app_data=None) -> None:  # type: ignore[override]
+    def rebuild_index(self, sender=None, app_data=None) -> None:
         def handler() -> str:
             store = self._create_store()
             store.rebuild()
-            return f"索引已保存至 {dpg.get_value('index_path')}"
+            return f"✅ 索引已重建并保存至 {dpg.get_value('index_path')}"
 
         self._run_action(handler)
 
-    def search_chunks(self, sender=None, app_data=None) -> None:  # type: ignore[override]
+    def search_chunks(self, sender=None, app_data=None) -> None:
         def handler() -> str:
             store = self._create_store()
             results = store.search(dpg.get_value("search_query"), top_k=5)
             lines = store.as_lines(results)
-            return "\n".join(lines) if lines else "未找到匹配结果。"
+            return "\n".join(lines) if lines else "未找到匹配结果，请尝试换个关键词。"
 
         self._run_action(handler)
 
-    def inspire(self, sender=None, app_data=None) -> None:  # type: ignore[override]
+    def inspire(self, sender=None, app_data=None) -> None:
         def handler() -> str:
             assistant = self._create_assistant()
             ideas = assistant.inspire(dpg.get_value("document"), hint=dpg.get_value("hint"))
@@ -183,10 +213,14 @@ class Application:
 
         self._run_action(handler)
 
-    def review_chapter(self, sender=None, app_data=None) -> None:  # type: ignore[override]
+    def review_chapter(self, sender=None, app_data=None) -> None:
         def handler() -> str:
             assistant = self._create_assistant()
-            feedback = assistant.review_chapter(dpg.get_value("document"), dpg.get_value("prompt"))
+            chapter_body = dpg.get_value("chapter_body")
+            if not chapter_body.strip():
+                return "⚠️ 章节内容为空，请先在「章节内容」里粘贴或输入文本。"
+
+            feedback = assistant.review_chapter(dpg.get_value("document"), chapter_body)
             return "\n".join(feedback)
 
         self._run_action(handler)

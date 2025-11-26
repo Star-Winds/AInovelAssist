@@ -1,21 +1,23 @@
-# Build artifacts
-dist/
-build/
-bin/
-Output/
-
-# Virtual environments
-.venv/
-
-# Python cache
+# Python
 __pycache__/
 *.pyc
 
-# Inno Setup output
-*.exe
-*.msi
+# Virtual env
+.venv/
 
-# Ingest sample test files (if not needed)
-data/gbk.txt
-data/utf8.txt
-data/sample.docx
+# Build artifacts
+build/
+dist/
+*.spec
+
+# VSCode / PyCharm 等
+.vscode/
+.idea/
+
+# Models / sensitive keys
+*.env
+*.db      # 如果你不想公开 novel.db，可选择加
+data/*.joblib  # 可选
+
+# Runtime logs
+*.log
