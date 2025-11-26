@@ -1,12 +1,21 @@
-# Python
-__pycache__/
-*.pyc
+# Build artifacts
+dist/
+build/
+bin/
+Output/
+
+# Virtual environments
 .venv/
 
-# Data
-data/*.db
-data/*.txt
-data/*.docx
+# Python cache
+__pycache__/
+*.pyc
 
-# Backup
-scripts/ingest_backup.py
+# Inno Setup output
+*.exe
+*.msi
+
+# Ingest sample test files (if not needed)
+data/gbk.txt
+data/utf8.txt
+data/sample.docx

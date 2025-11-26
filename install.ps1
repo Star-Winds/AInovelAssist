@@ -1,32 +1,85 @@
-#!/usr/bin/env pwsh
-# Windows-friendly installer: create venv, install deps, and generate launcher
-Set-StrictMode -Version Latest
+# install.ps1
+# Windows installer: create virtual environment, install dependencies, and create launcher run_ainovelassist.cmd
+
 $ErrorActionPreference = "Stop"
 
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$venvDir = Join-Path $root ".venv"
-$binDir = Join-Path $root "bin"
-$launcher = Join-Path $binDir "ainovelassist.cmd"
+Write-Host ""
+Write-Host "===== AInovelAssist Windows Installer ====="
+Write-Host ""
 
-$pythonCmd = Get-Command python -ErrorAction SilentlyContinue
-if (-not $pythonCmd) {
-    Write-Error "❌ 未找到 python，请安装 Python 3.11+ 后再试。"
+# 1. Project paths
+$RootDir  = Split-Path -Parent $MyInvocation.MyCommand.Path
+$VenvDir  = Join-Path $RootDir ".venv"
+$ReqFile  = Join-Path $RootDir "requirements.txt"
+$BinDir   = Join-Path $RootDir "bin"
+$Launcher = Join-Path $BinDir "run_ainovelassist.cmd"
+
+Write-Host "Project directory: $RootDir"
+
+# 2. Check python
+Write-Host ""
+Write-Host "Checking for python..."
+try {
+    $pythonCmd = Get-Command python -ErrorAction Stop
+    Write-Host "Found python at: $($pythonCmd.Source)"
+} catch {
+    Write-Host "ERROR: python was not found. Please install Python 3.11+ and add it to PATH."
     exit 1
 }
 
-& $pythonCmd.Source -m venv $venvDir
-$venvPython = Join-Path $venvDir "Scripts\python.exe"
-& $venvPython -m pip install --upgrade pip
-& $venvPython -m pip install -r (Join-Path $root "requirements.txt")
+# 3. Create virtual environment
+if (-not (Test-Path $VenvDir)) {
+    Write-Host ""
+    Write-Host "Creating virtual environment in: $VenvDir"
+    python -m venv $VenvDir
+} else {
+    Write-Host ""
+    Write-Host "Virtual environment already exists: $VenvDir"
+}
 
-New-Item -ItemType Directory -Force -Path $binDir | Out-Null
-$launcherContent = @"
-@echo off
-setlocal
-set SCRIPT_DIR=%~dp0..
-"%SCRIPT_DIR%\.venv\Scripts\python.exe" "%SCRIPT_DIR%\scripts\app.py" %*
-"@
-Set-Content -Path $launcher -Value $launcherContent -Encoding ASCII
+$VenvPython = Join-Path $VenvDir "Scripts\python.exe"
+if (-not (Test-Path $VenvPython)) {
+    Write-Host "ERROR: $VenvPython was not found. Virtual environment creation may have failed."
+    exit 1
+}
 
-Write-Output "安装完成！使用 $launcher 运行示例："
-Write-Output "  $launcher demo"
+# 4. Upgrade pip
+Write-Host ""
+Write-Host "Upgrading pip..."
+& $VenvPython -m pip install --upgrade pip
+
+# 5. Install dependencies
+if (-not (Test-Path $ReqFile)) {
+    Write-Host "ERROR: requirements.txt not found in project root."
+    exit 1
+}
+
+Write-Host ""
+Write-Host "Installing dependencies from requirements.txt..."
+& $VenvPython -m pip install -r $ReqFile
+
+# 6. Create bin directory
+if (-not (Test-Path $BinDir)) {
+    New-Item -ItemType Directory -Path $BinDir | Out-Null
+}
+
+# 7. Create Windows launcher (CMD batch file)
+Write-Host ""
+Write-Host "Creating launcher: $Launcher"
+
+$launcherLines = @(
+    '@echo off',
+    'REM AInovelAssist Windows launcher',
+    'SET ROOT_DIR=%~dp0..',
+    '"%ROOT_DIR%\.venv\Scripts\python.exe" "%ROOT_DIR%\scripts\app.py" %*'
+)
+
+$launcherLines | Set-Content -Path $Launcher -Encoding ASCII
+
+Write-Host ""
+Write-Host "===== Install completed ====="
+Write-Host "Run example with:"
+Write-Host "  `"$Launcher demo`""
+Write-Host ""
+Write-Host "Or double-click bin\\run_ainovelassist.cmd in File Explorer."
+Write-Host ""
